@@ -3,7 +3,7 @@ name: Deploy EKS and Nginx
 on:
   pull_request:
     branches:
-      - master  # Trigger only on PRs to master
+      - master
 
 permissions:
   id-token: write
@@ -27,12 +27,15 @@ jobs:
 
       - name: Initialize Terraform
         run: terraform init
+        working-directory: infrastructure/eks
 
       - name: Plan Terraform Changes
         run: terraform plan
+        working-directory: infrastructure/eks
 
       - name: Apply Terraform Changes
         run: terraform apply -auto-approve
+        working-directory: infrastructure/eks
 
       - name: Configure kubectl
         run: aws eks update-kubeconfig --region us-east-1 --name my-eks-cluster
