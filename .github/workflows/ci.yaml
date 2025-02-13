@@ -1,0 +1,44 @@
+name: Deploy EKS and Nginx
+
+on:
+  push:
+    branches:
+      - master
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-region: us-east-1
+
+      - name: Install Terraform
+        uses: hashicorp/setup-terraform@v2
+
+      - name: Initialize Terraform
+        run: terraform init
+
+      - name: Plan Terraform Changes
+        run: terraform plan
+
+      - name: Apply Terraform Changes
+        run: terraform apply -auto-approve
+
+      - name: Configure kubectl
+        run: aws eks update-kubeconfig --region us-east-1 --name my-eks-cluster
+
+      - name: Deploy Nginx
+        run: |
+          kubectl apply -f kubernetes/nginx-configmap.yaml
+          kubectl apply -f kubernetes/nginx-deployment.yaml
+          kubectl apply -f kubernetes/nginx-service.yaml
