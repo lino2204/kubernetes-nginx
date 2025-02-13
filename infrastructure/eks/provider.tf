@@ -11,6 +11,6 @@ terraform {
 provider "aws" {
   region = "us-east-1"
   assume_role {
-    role_arn = "arn:aws:iam::730335231873:role/ip-github-prd"
+    role_arn = var.role_arn
   }
 }
