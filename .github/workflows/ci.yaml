@@ -1,4 +1,3 @@
-
 name: Deploy EKS and Nginx
 
 on:
@@ -28,12 +27,15 @@ jobs:
 
       - name: Initialize Terraform
         run: terraform init
+        working-directory: infrastructure/eks
 
       - name: Terraform Plan
         run: terraform plan -out=tfplan
+        working-directory: infrastructure/eks
 
       - name: Apply Terraform Plan
         run: terraform apply -auto-approve tfplan
+        working-directory: infrastructure/eks
 
       - name: Configure kubectl
         run: aws eks update-kubeconfig --region us-east-1 --name my-eks-cluster
