@@ -1,7 +1,7 @@
 name: Deploy EKS and Nginx
 
 on:
-  pull_request:
+  push:
     branches:
       - master
 
@@ -10,7 +10,43 @@ permissions:
   contents: read
 
 jobs:
-  deploy:
+  terraform-plan:
+    runs-on: ubuntu-latest
+    outputs:
+      tfplan-exists: ${{ steps.check-plan.outputs.tfplan-exists }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-region: us-east-1
+
+      - name: Install Terraform
+        uses: hashicorp/setup-terraform@v2
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Plan
+        run: terraform plan -out=tfplan
+
+      - name: Save Terraform Plan
+        run: |
+          mkdir -p artifact
+          mv tfplan artifact/
+        if: success()
+
+      - name: Upload Terraform Plan Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: terraform-plan
+          path: artifact/
+
+  terraform-apply:
+    needs: terraform-plan
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -25,17 +61,27 @@ jobs:
       - name: Install Terraform
         uses: hashicorp/setup-terraform@v2
 
-      - name: Initialize Terraform
-        run: terraform init
-        working-directory: infrastructure/eks
+      - name: Download Terraform Plan
+        uses: actions/download-artifact@v3
+        with:
+          name: terraform-plan
+          path: artifact/
 
-      - name: Plan Terraform Changes
-        run: terraform plan
-        working-directory: infrastructure/eks
+      - name: Apply Terraform Plan
+        run: terraform apply -auto-approve artifact/tfplan
 
-      - name: Apply Terraform Changes
-        run: terraform apply -auto-approve
-        working-directory: infrastructure/eks
+  deploy-nginx:
+    needs: terraform-apply
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-region: us-east-1
 
       - name: Configure kubectl
         run: aws eks update-kubeconfig --region us-east-1 --name my-eks-cluster
@@ -45,8 +91,3 @@ jobs:
           kubectl apply -f kubernetes/nginx-configmap.yaml
           kubectl apply -f kubernetes/nginx-deployment.yaml
           kubectl apply -f kubernetes/nginx-service.yaml
-
-      - name: Verify Deployment
-        run: |
-          kubectl rollout status deployment/nginx-deployment
-        continue-on-error: false  # Fail the workflow if deployment is unsuccessful
