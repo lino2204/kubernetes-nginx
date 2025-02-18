@@ -1,6 +1,6 @@
 module "eks" {
   source          = "terraform-aws-modules/eks/aws"
-  version         = "20.4.0"  # Ensure you use the latest supported version
+  version         = "20.4.0"
 
   cluster_name    = "kubernetes-nginx"
   cluster_version = "1.27"
