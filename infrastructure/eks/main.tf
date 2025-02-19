@@ -4,8 +4,8 @@ module "eks" {
 
   cluster_name    = "kubernetes-nginx"
   cluster_version = "1.27"
-  subnet_ids      = ["subnet-0dc05aad49e7d2683", "subnet-03363be1ce4604a62"]
-  vpc_id          = "vpc-0c30330460fa51680"
+  subnet_ids      = ["subnet-03d5f296cbe6f9925", "subnet-06a837fe8cac23329"]
+  vpc_id          = "vpc-033705b2c52ed5260"
 
   eks_managed_node_groups = {
     eks_nodes = {
