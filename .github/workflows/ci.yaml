@@ -1,13 +1,11 @@
-name: Deploy EKS and Nginx
+name: Deploy to AWS
 
 on:
   pull_request:
-    branches:
-      - master
     types:
-      - opened
-      - synchronize
-      - reopened
+      - closed  # Runs when a PR is merged
+    branches:
+      - main
 
 permissions:
   id-token: write
@@ -15,38 +13,33 @@ permissions:
 
 jobs:
   deploy:
+    name: Terraform Deploy
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout repository
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Configure AWS Credentials (OIDC)
+      - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
           aws-region: us-east-1
           role-session-name: GitHubActionsSession
 
-      - name: Install Terraform
-        uses: hashicorp/setup-terraform@v2
+      - name: Verify AWS Credentials
+        run: aws sts get-caller-identity
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: latest
 
       - name: Initialize Terraform
         run: terraform init
-        working-directory: infrastructure/eks
 
       - name: Terraform Plan
         run: terraform plan -out=tfplan
-        working-directory: infrastructure/eks
 
-      - name: Apply Terraform Plan
+      - name: Terraform Apply
         run: terraform apply -auto-approve tfplan
-        working-directory: infrastructure/eks
-
-      - name: Configure kubectl
-        run: aws eks update-kubeconfig --region us-east-1 --name my-eks-cluster
-
-      - name: Deploy Nginx
-        run: |
-          kubectl apply -f kubernetes/nginx-configmap.yaml
-          kubectl apply -f kubernetes/nginx-deployment.yaml
-          kubectl apply -f kubernetes/nginx-service.yaml
