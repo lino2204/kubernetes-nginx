@@ -3,16 +3,16 @@ name: Deploy to AWS
 on:
   pull_request:
     types:
-      - closed  # Runs when a PR is merged
+      - closed  # Runs only when a PR is merged
     branches:
-      - main
+      - master
 
 permissions:
   id-token: write
   contents: read
 
 jobs:
-  deploy:
+  deploy:  # 👈 This must match the required status check name
     name: Terraform Deploy
     runs-on: ubuntu-latest
 
