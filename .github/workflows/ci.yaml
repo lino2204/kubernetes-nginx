@@ -22,7 +22,7 @@ jobs:
 
       - name: List Files (Debugging Step)
         run: ls -R
-        working-directory: ./infrastructure/ek
+        working-directory: ./infrastructure/eks
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v2
