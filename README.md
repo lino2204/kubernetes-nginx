@@ -1,2 +1,3 @@
-# kubernetes-nginx
-Kubernetes Nginx
+# Kubernetes NGINX
+
+Kubernetes Nginx deploying in AWS EKS
