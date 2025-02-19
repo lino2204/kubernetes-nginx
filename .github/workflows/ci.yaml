@@ -4,6 +4,10 @@ on:
   pull_request:
     branches:
       - master
+    types:
+      - opened
+      - synchronize
+      - reopened
 
 permissions:
   id-token: write
@@ -21,6 +25,7 @@ jobs:
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
           aws-region: us-east-1
+          role-session-name: GitHubActionsSession
 
       - name: Install Terraform
         uses: hashicorp/setup-terraform@v2
