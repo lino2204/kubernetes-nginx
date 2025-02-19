@@ -2,8 +2,6 @@ name: Deploy to AWS
 
 on:
   pull_request:
-    types:
-      - closed  # Runs only when a PR is merged
     branches:
       - master
 
